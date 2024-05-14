@@ -15,6 +15,7 @@ fun curry  f x y   = f (x, y)
 fun curry3 f x y z = f (x, y, z)
 
 (* TOKEN *)
+(* {{{ *)
 datatype Token = IDENT of string
                | INT of string
                | STRING of string
@@ -50,8 +51,10 @@ datatype Token = IDENT of string
                | GT
                | EQ
                | NEQ
+               (* }}} *)
 
 (* val lookup_ident: string -> Token *)
+(* {{{ *)
 fun lookup_ident "let"    = LET
   | lookup_ident "fn"     = FUNCTION
   | lookup_ident "true"   = TRUE
@@ -61,8 +64,10 @@ fun lookup_ident "let"    = LET
   | lookup_ident "return" = RETURN
   | lookup_ident "import" = IMPORT
   | lookup_ident s        = IDENT s
+  (* }}} *)
 
 (* val get_literal: Token -> string *)
+(* {{{ *)
 fun get_literal (IDENT s)  = s
   | get_literal (INT s)    = s
   | get_literal (STRING s) = s
@@ -95,9 +100,11 @@ fun get_literal (IDENT s)  = s
   | get_literal EQ         = "=="
   | get_literal NEQ        = "!="
   | get_literal POWER      = "**"
+  (* }}} *)
 
 (* for debugging *)
 (* val tokenString : Token -> string *)
+(* {{{ *)
 fun tokenString (IDENT s)  = "IDENT(" ^ s ^ ")"
   | tokenString (INT s)    = "INT(" ^ s ^ ")"
   | tokenString (STRING s) = "STRING(\"" ^ s ^ "\")"
@@ -130,6 +137,7 @@ fun tokenString (IDENT s)  = "IDENT(" ^ s ^ ")"
   | tokenString EQ         = "EQ"
   | tokenString NEQ        = "NEQ"
   | tokenString POWER      = "POWER"
+  (* }}} *)
 
 (* LEXER *)
 (* The goal is to take the input string and parse it into a series of Tokens *)
