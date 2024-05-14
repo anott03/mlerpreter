@@ -171,21 +171,50 @@ fun next_token l =
     (nt c)
   end
 
+fun firstChar s = (String.extract (s, 1, NONE), String.sub (s, 0))
+
 (* val read_char: Lexer -> Lexer * char *)
+(* takes a lexer, reads extracts the first char from it, and returns the char
+ * and an updated lexer *)
 fun read_char l =
   let val { input=input, ch=ch } = l
-      val firstChar = String.sub(input, 0)
-      val remainder = String.extract(input, 1, NONE)
-      val newLexer  = { input=remainder, ch = firstChar }
+      val (remainder, c) = firstChar input
+      val newLexer       = { input=remainder, ch=c }
   in
-    (newLexer, firstChar)
+    (newLexer, c)
   end
 
-val lexer = { input = "val x = 10;", ch = #"," }
-val (l, ch) = read_char lexer
-val () = println (String.str ch)
+(* val read_identifier : Lexer -> Lexer * string *)
+fun read_identifier l =
+  let fun ri (s, c) =
+        if (Char.isAlpha c) orelse (c = #"_")
+        then (String.str c) ^ (ri (firstChar s))
+        else ""
 
-(*
-val (l, t) = next_token lexer
-val () = println (tokenString t)
-*)
+      val { input=input, ch=ch } = l
+      val identifier             = ri (input, ch)
+      val remainder              = String.extract (input, String.size identifier, NONE)
+      val c                      = String.sub(remainder, 0)
+  in
+    ({ input=remainder, ch=c  }, identifier)
+  end
+
+(* val read_number : Lexer -> Lexer * string *)
+fun read_number l =
+  let fun ri (s, c) =
+        if (Char.isDigit c)
+        then (String.str c) ^ (ri (firstChar s))
+        else ""
+
+      val { input=input, ch=ch } = l
+      val identifier             = ri (input, ch)
+      val remainder              = String.extract (input, String.size identifier, NONE)
+      val c                      = String.sub(remainder, 0)
+  in
+    ({ input=remainder, ch=c  }, identifier)
+  end
+
+val lexer = { input = "super_long_var_name = 100;", ch = #"," }
+val (lexer, _) = read_char lexer
+val (lexer, ident) = read_identifier lexer
+val () = println ident
