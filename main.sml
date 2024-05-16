@@ -146,32 +146,8 @@ type Lexer = {
   ch: char
 }
 
-(* val next_token: Lexer -> Lexer * Token *)
-fun next_token l =
-  let fun nt #"\^Z" = (l, EOF)
-        | nt #"," = (l, COMMA)
-        | nt #";" = (l, SEMICOLON)
-        | nt #"(" = (l, LPAREN)
-        | nt #")" = (l, RPAREN)
-        | nt #"{" = (l, LSQUIRLY)
-        | nt #"}" = (l, RSQUIRLY)
-        | nt #"[" = (l, LBRACKET)
-        | nt #"]" = (l, RBRACKET)
-
-        | nt #"+" = (l, PLUS)
-        | nt #"-" = (l, MINUS)
-        | nt #"/" = (l, SLASH)
-        | nt #"*" = (l, ASTERISK)
-        | nt #"<" = (l, LT)
-        | nt #">" = (l, GT)
-        | nt ch  = (l, ILLEGAL)
-
-      val { input=inp, ch=c, ... }: Lexer = l
-  in
-    (nt c)
-  end
-
-fun firstChar s = (String.extract (s, 1, NONE), String.sub (s, 0))
+fun firstChar "" = ("", Char.chr 26)
+  | firstChar s = (String.extract (s, 1, NONE), String.sub (s, 0))
 
 (* val read_char: Lexer -> Lexer * char *)
 (* takes a lexer, reads extracts the first char from it, and returns the char
@@ -181,10 +157,10 @@ fun read_char l =
       val (remainder, c) = firstChar input
       val newLexer       = { input=remainder, ch=c }
   in
-    (newLexer, c)
+    newLexer
   end
 
-(* val read_identifier : Lexer -> Lexer * string *)
+(* val read_identifier : Lexer -> Lexer * Token *)
 fun read_identifier l =
   let fun ri (s, c) =
         if (Char.isAlpha c) orelse (c = #"_")
@@ -196,25 +172,108 @@ fun read_identifier l =
       val remainder              = String.extract (input, String.size identifier, NONE)
       val c                      = String.sub(remainder, 0)
   in
-    ({ input=remainder, ch=c  }, identifier)
+    (read_char { input=remainder, ch=c  }, (IDENT identifier))
   end
 
-(* val read_number : Lexer -> Lexer * string *)
+(* val read_number : Lexer -> Lexer * Token *)
 fun read_number l =
-  let fun ri (s, c) =
+  let fun rn (s, c) =
         if (Char.isDigit c)
-        then (String.str c) ^ (ri (firstChar s))
+        then (String.str c) ^ (rn (firstChar s))
         else ""
 
       val { input=input, ch=ch } = l
-      val identifier             = ri (input, ch)
-      val remainder              = String.extract (input, String.size identifier, NONE)
+      val number                 = rn (input, ch)
+      val remainder              = String.extract (input, String.size number, NONE)
       val c                      = String.sub(remainder, 0)
   in
-    ({ input=remainder, ch=c  }, identifier)
+    (read_char { input=remainder, ch=c  }, (INT number))
   end
 
-val lexer = { input = "super_long_var_name = 100;", ch = #"," }
-val (lexer, _) = read_char lexer
-val (lexer, ident) = read_identifier lexer
-val () = println ident
+(* val read_string : Lexer -> Lexer * Token *)
+fun read_string l =
+  let fun rs (s, c) =
+        if (not (c = #"\""))
+        then (String.str c) ^ (rs (firstChar s))
+        else ""
+
+      val { input=input, ch=ch } = l
+      val number                 = rs (input, ch)
+      val remainder              = String.extract (input, String.size number, NONE)
+      val c                      = String.sub(remainder, 0)
+  in
+    ({ input=remainder, ch=c  }, (INT number))
+  end
+
+(* val next_token: Lexer -> Lexer * Token *)
+fun next_token l =
+  let val l2 = read_char l
+      val { ch=c, ... }: Lexer = l
+
+      fun nt #"\^Z" = (l2, EOF)
+        | nt #","   = (l2, COMMA)
+        | nt #";"   = (l2, SEMICOLON)
+        | nt #"("   = (l2, LPAREN)
+        | nt #")"   = (l2, RPAREN)
+        | nt #"{"   = (l2, LSQUIRLY)
+        | nt #"}"   = (l2, RSQUIRLY)
+        | nt #"["   = (l2, LBRACKET)
+        | nt #"]"   = (l2, RBRACKET)
+        | nt #"="   = (l2, ASSIGN)
+        | nt #"+"   = (l2, PLUS)
+        | nt #"-"   = (l2, MINUS)
+        | nt #"/"   = (l2, SLASH)
+        | nt #"*"   = (l2, ASTERISK)
+        | nt #"<"   = (l2, LT)
+        | nt #">"   = (l2, GT)
+        | nt #"_"   = (read_identifier l)
+        | nt #"\""  = (read_string l)
+        (* if only SML supported guards... :( *)
+        | nt ch     = if (Char.isAlpha ch)
+                      then (read_identifier l)
+                      else if (Char.isDigit ch)
+                           then (read_number l)
+                           else (l, ILLEGAL)
+
+      fun clear_whitespace { input=input, ch=ch } =
+        if (ch = #" ") then
+          read_char { input=input, ch=ch }
+        else
+          { input=input, ch=ch }
+
+      val (new_lexer, t)       = nt c
+  in
+    (clear_whitespace new_lexer, t)
+  end
+
+fun lexerString { input=input, ch=ch } =
+  "{ input=\"" ^ input ^ "\", ch=#\"" ^ (String.str ch) ^ "\" }"
+
+val lexer = { input = "et super_long_var_name = 100 + 50;", ch = #"l" }
+val () = println (lexerString lexer)
+val (lexer, t) = next_token lexer
+val () = println (tokenString t)
+val () = println ""
+
+val () = println (lexerString lexer)
+val (lexer, t) = next_token lexer
+val () = println (tokenString t)
+val () = println ""
+
+val () = println (lexerString lexer)
+val (lexer, t) = next_token lexer
+val () = println (tokenString t)
+val () = println ""
+
+val () = println (lexerString lexer)
+val (lexer, t) = next_token lexer
+val () = println (tokenString t)
+val () = println ""
+
+val () = println (lexerString lexer)
+val (lexer, t) = next_token lexer
+val () = println (tokenString t)
+
+val () = println (lexerString lexer)
+val (lexer, t) = next_token lexer
+val () = println (tokenString t)
