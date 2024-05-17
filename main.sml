@@ -212,7 +212,8 @@ fun read_string l =
       val remainder = String.extract (input, (String.size str) - 1, NONE)
       val c = String.sub(remainder, 0)
   in
-    (read_char { input=remainder, ch=c  }, (STRING str))
+    (* 🤔 *) 
+    (read_char (read_char { input=remainder, ch=c  }), (STRING str))
   end
 
 (* val next_token: Lexer -> Lexer * Token *)
@@ -259,6 +260,65 @@ fun next_token l =
 (* TESTING *)
 (* {{{ *)
 val lexer = { input = "et super_long_var_name = 100 + 50;", ch = #"l" }
+val () = println (lexerString lexer)
+val (lexer, t) = next_token lexer
+val () = println (tokenString t)
+val () = println ""
+
+val () = println (lexerString lexer)
+val (lexer, t) = next_token lexer
+val () = println (tokenString t)
+val () = println ""
+
+val () = println (lexerString lexer)
+val (lexer, t) = next_token lexer
+val () = println (tokenString t)
+val () = println ""
+
+val () = println (lexerString lexer)
+val (lexer, t) = next_token lexer
+val () = println (tokenString t)
+val () = println ""
+
+val () = println (lexerString lexer)
+val (lexer, t) = next_token lexer
+val () = println (tokenString t)
+val () = println ""
+
+val () = println (lexerString lexer)
+val (lexer, t) = next_token lexer
+val () = println (tokenString t)
+val () = println ""
+
+val () = println (lexerString lexer)
+val (lexer, t) = next_token lexer
+val () = println (tokenString t)
+
+val () = (println ""; println "--------------------------"; println "")
+
+val lexer = { input = "some lengthy string\" = \"another string\"", ch = #"\"" }
+val () = println (lexerString lexer)
+val (lexer, t) = next_token lexer
+val () = println (tokenString t)
+val () = println ""
+
+val () = println (lexerString lexer)
+val (lexer, t) = next_token lexer
+val () = println (tokenString t)
+val () = println ""
+
+val () = println (lexerString lexer)
+val (lexer, t) = next_token lexer
+val () = println (tokenString t)
+
+val () = (println ""; println "--------------------------"; println "")
+
+val lexer = { input = "et super_long_var_name \"a sneaky string\" = 100 + 50;", ch = #"l" }
+val () = println (lexerString lexer)
+val (lexer, t) = next_token lexer
+val () = println (tokenString t)
+val () = println ""
+
 val () = println (lexerString lexer)
 val (lexer, t) = next_token lexer
 val () = println (tokenString t)
