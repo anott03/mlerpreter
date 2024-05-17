@@ -257,7 +257,39 @@ fun next_token l =
     (clear_whitespace new_lexer, t)
   end
 
+(* PARSING *)
+type Parser = { lexer:      Lexer,
+                curr_token: Token,
+                peek_token: Token,
+                errors:     string list }
+
+fun parserString parser =
+  let val { curr_token=curr_token,
+            peek_token=peek_token,
+            errors=errors, ... }: Parser = parser
+  in
+    "{ curr_token=" ^ (tokenString curr_token) ^ ", peek_token="
+    ^ (tokenString peek_token) ^ " }"
+  end
+
+(* val new_parser : Lexer -> Parser *)
+fun new_parser l =
+  let val (l, firstToken)     = next_token l
+      val (l, secondToken)    = next_token l
+      val errors: string list = []
+  in
+    { curr_token=firstToken, peek_token=secondToken, errors=errors, lexer=l }
+  end
+
+fun p_next_token p =
+  let val { lexer=lexer, peek_token=peek_token, errors=errors, ... }: Parser = p
+      val (lexer, nt) = next_token lexer
+  in
+    { lexer=lexer, curr_token=peek_token, peek_token=nt, errors=errors } 
+  end
+
 (* TESTING *)
+(*
 (* {{{ *)
 val lexer = { input = "et super_long_var_name = 100 + 50;", ch = #"l" }
 val () = println (lexerString lexer)
@@ -353,3 +385,12 @@ val () = println (lexerString lexer)
 val (lexer, t) = next_token lexer
 val () = println (tokenString t)
 (* }}} *)
+*)
+
+val lexer = { input = "et super_long_var_name = 100 + 50;", ch = #"l" }
+val parser = new_parser lexer
+val () = println (parserString parser)
+val parser = p_next_token parser
+val () = println (parserString parser)
+val parser = p_next_token parser
+val () = println (parserString parser)
