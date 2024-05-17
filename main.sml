@@ -7,6 +7,9 @@ fun eprintln s = (eprint s; eprint "\n")
 fun intString n =
   String.map (fn #"~" => #"-" | c => c) (Int.toString n)
 
+fun lexerString { input=input, ch=ch } =
+  "{ input=\"" ^ input ^ "\", ch=#\"" ^ (String.str ch) ^ "\" }"
+
 (* PAIR UTILS *)
 fun fst (x, _) = x
 fun snd (_, y) = y
@@ -147,7 +150,11 @@ type Lexer = {
 }
 
 fun firstChar "" = ("", Char.chr 26)
-  | firstChar s = (String.extract (s, 1, NONE), String.sub (s, 0))
+  | firstChar s =
+      if String.size s > 1 then
+        (String.extract (s, 1, NONE), String.sub (s, 0))
+      else
+        ("", String.sub(s, 0))
 
 (* val read_char: Lexer -> Lexer * char *)
 (* takes a lexer, reads extracts the first char from it, and returns the char
@@ -169,8 +176,8 @@ fun read_identifier l =
 
       val { input=input, ch=ch } = l
       val identifier             = ri (input, ch)
-      val remainder              = String.extract (input, String.size identifier, NONE)
-      val c                      = String.sub(remainder, 0)
+      val remainder = String.extract (input, (String.size identifier) - 1, NONE)
+      val c = String.sub(remainder, 0)
   in
     (read_char { input=remainder, ch=c  }, (IDENT identifier))
   end
@@ -183,9 +190,11 @@ fun read_number l =
         else ""
 
       val { input=input, ch=ch } = l
+
       val number                 = rn (input, ch)
-      val remainder              = String.extract (input, String.size number, NONE)
-      val c                      = String.sub(remainder, 0)
+      val remainder = String.extract (input, (String.size number) - 1, NONE)
+
+      val c = String.sub(remainder, 0) (* handle Subscript => #"\^Z"  *)
   in
     (read_char { input=remainder, ch=c  }, (INT number))
   end
@@ -198,11 +207,12 @@ fun read_string l =
         else ""
 
       val { input=input, ch=ch } = l
-      val number                 = rs (input, ch)
-      val remainder              = String.extract (input, String.size number, NONE)
-      val c                      = String.sub(remainder, 0)
+      val (input, ch)            = firstChar input
+      val str                    = rs (input, ch)
+      val remainder = String.extract (input, (String.size str) - 1, NONE)
+      val c = String.sub(remainder, 0)
   in
-    ({ input=remainder, ch=c  }, (INT number))
+    (read_char { input=remainder, ch=c  }, (STRING str))
   end
 
 (* val next_token: Lexer -> Lexer * Token *)
@@ -246,9 +256,8 @@ fun next_token l =
     (clear_whitespace new_lexer, t)
   end
 
-fun lexerString { input=input, ch=ch } =
-  "{ input=\"" ^ input ^ "\", ch=#\"" ^ (String.str ch) ^ "\" }"
-
+(* TESTING *)
+(* {{{ *)
 val lexer = { input = "et super_long_var_name = 100 + 50;", ch = #"l" }
 val () = println (lexerString lexer)
 val (lexer, t) = next_token lexer
@@ -273,7 +282,14 @@ val () = println ""
 val () = println (lexerString lexer)
 val (lexer, t) = next_token lexer
 val () = println (tokenString t)
+val () = println ""
 
 val () = println (lexerString lexer)
 val (lexer, t) = next_token lexer
 val () = println (tokenString t)
+val () = println ""
+
+val () = println (lexerString lexer)
+val (lexer, t) = next_token lexer
+val () = println (tokenString t)
+(* }}} *)
