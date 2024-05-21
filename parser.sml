@@ -14,7 +14,6 @@ signature PARSER = sig
 end
 
 functor ParserNew(structure L: LEXER) : PARSER = struct
-
   type Parser = { lexer:      L.Lexer,
                   curr_token: T.Token,
                   peek_token: T.Token,
@@ -24,7 +23,7 @@ functor ParserNew(structure L: LEXER) : PARSER = struct
   fun parserString parser =
     let val { curr_token=curr_token,
               peek_token=peek_token,
-              errors=errors, ... }: Parser = parser
+              errors=errors, ... } = parser
     in
       "{ curr_token=" ^ (T.tokenString curr_token) ^ ", peek_token="
       ^ (T.tokenString peek_token) ^ " }"
@@ -39,26 +38,26 @@ functor ParserNew(structure L: LEXER) : PARSER = struct
     end
 
   fun next_token p =
-    let val { lexer=lexer, peek_token=peek_token, errors=errors, ... }: Parser = p
+    let val { lexer=lexer, peek_token=peek_token, errors=errors, ... } = p
         val (lexer, nt) = L.next_token lexer
     in
       { lexer=lexer, curr_token=peek_token, peek_token=nt, errors=errors } 
     end
 
   fun expect_peek (p, t) =
-    let val { peek_token, ... }: Parser = p
+    let val { peek_token, ... } = p
     in
       t = peek_token
     end
 
   fun expect_curr (p, t) =
-    let val { curr_token, ... }: Parser = p
+    let val { curr_token, ... } = p
     in
       t = curr_token
     end
 
   fun peek_error (p, t) = 
-    let val { peek_token, errors, ... }: Parser = p
+    let val { peek_token, errors, ... } = p
         val err_msg = "Expected " ^ (T.tokenString t) ^ " but got "
                                                     ^ (T.tokenString peek_token)
         val errors  = errors @ [err_msg]
@@ -68,7 +67,7 @@ functor ParserNew(structure L: LEXER) : PARSER = struct
     end
 
   fun peek_priority p =
-    let val { peek_token, ... }: Parser = p
+    let val { peek_token, ... } = p
     in
       T.get_priority peek_token
     end

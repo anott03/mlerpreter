@@ -47,7 +47,8 @@ struct
 
         val { input=input, ch=ch } = l
         val identifier             = ri (input, ch)
-        val remainder = String.extract (input, (String.size identifier) - 1, NONE)
+        val remainder = String.extract (input, (String.size identifier) - 1,
+                                                                           NONE)
         val c = String.sub(remainder, 0)
     in
       (read_char { input=remainder, ch=c  }, (T.IDENT identifier))
@@ -87,7 +88,7 @@ struct
 
   fun next_token l =
     let val l2 = read_char l
-        val { ch=c, ... }: Lexer = l
+        val { ch=c, ... } = l
 
         fun clear_whitespace { input=input, ch=ch } =
           if (ch = #" ") then

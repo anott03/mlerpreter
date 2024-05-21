@@ -36,7 +36,7 @@ signature TOKEN = sig
                  | NEQ
 
   val get_literal  : Token -> string
-  val lookup_ident: string -> Token
+  val lookup_ident : string -> Token
   val get_priority : Token -> int
   val tokenString  : Token -> string
 end

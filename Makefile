@@ -1,4 +1,4 @@
-main: main.sml main.cm
+main: *.sml main.cm
 	./bin/compile-cm -o a.out main.cm
 
 clean:
