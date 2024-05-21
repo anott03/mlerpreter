@@ -1,5 +1,6 @@
 group is
     token.sml
     lexer.sml
+    ast.sml
     parser.sml
     main.sml

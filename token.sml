@@ -37,7 +37,6 @@ signature TOKEN = sig
 
   val get_literal  : Token -> string
   val lookup_ident : string -> Token
-  val get_priority : Token -> int
   val tokenString  : Token -> string
 end
 
@@ -121,17 +120,6 @@ struct
     | lookup_ident "return" = RETURN
     | lookup_ident "import" = IMPORT
     | lookup_ident s        = IDENT s
-
-  fun get_priority EQ        = 1
-    | get_priority NEQ       = 1
-    | get_priority LT        = 2
-    | get_priority GT        = 2
-    | get_priority PLUS      = 3
-    | get_priority MINUS     = 3
-    | get_priority SLASH     = 4
-    | get_priority ASTERISK  = 4
-    | get_priority LPAREN    = 5
-    | get_priority t         = 0
 
   fun tokenString (IDENT s)  = "IDENT(" ^ s ^ ")"
     | tokenString (INT s)    = "INT(" ^ s ^ ")"
