@@ -7,8 +7,8 @@ fun eprintln s = (eprint s; eprint "\n")
 fun intString n =
   String.map (fn #"~" => #"-" | c => c) (Int.toString n)
 
-fun lexerString { input=input, ch=ch } =
-  "{ input=\"" ^ input ^ "\", ch=#\"" ^ (String.str ch) ^ "\" }"
+fun boolString b =
+  String.concat [case b of true => "true" | false => "false"];
 
 (* PAIR UTILS *)
 fun fst (x, _) = x
@@ -149,6 +149,9 @@ type Lexer = {
   ch: char
 }
 
+fun lexerString { input=input, ch=ch } =
+  "{ input=\"" ^ input ^ "\", ch=#\"" ^ (String.str ch) ^ "\" }"
+
 fun firstChar "" = ("", Char.chr 26)
   | firstChar s =
       if String.size s > 1 then
@@ -217,9 +220,16 @@ fun read_string l =
   end
 
 (* val next_token: Lexer -> Lexer * Token *)
+(* {{{ *)
 fun next_token l =
   let val l2 = read_char l
       val { ch=c, ... }: Lexer = l
+
+      fun clear_whitespace { input=input, ch=ch } =
+        if (ch = #" ") then
+          read_char { input=input, ch=ch }
+        else
+          { input=input, ch=ch }
 
       fun nt #"\^Z" = (l2, EOF)
         | nt #","   = (l2, COMMA)
@@ -237,6 +247,7 @@ fun next_token l =
         | nt #"*"   = (l2, ASTERISK)
         | nt #"<"   = (l2, LT)
         | nt #">"   = (l2, GT)
+        | nt #" "   = next_token (clear_whitespace l2)
         | nt #"_"   = (read_identifier l)
         | nt #"\""  = (read_string l)
         (* if only SML supported guards... :( *)
@@ -246,16 +257,11 @@ fun next_token l =
                            then (read_number l)
                            else (l, ILLEGAL)
 
-      fun clear_whitespace { input=input, ch=ch } =
-        if (ch = #" ") then
-          read_char { input=input, ch=ch }
-        else
-          { input=input, ch=ch }
-
-      val (new_lexer, t)       = nt c
+      val (new_lexer, t) = nt c
   in
-    (clear_whitespace new_lexer, t)
+    (new_lexer, t)
   end
+  (* }}} *)
 
 (* PARSING *)
 type Parser = { lexer:      Lexer,
@@ -288,8 +294,50 @@ fun p_next_token p =
     { lexer=lexer, curr_token=peek_token, peek_token=nt, errors=errors } 
   end
 
+fun expect_peek (p, t) =
+  let val { peek_token, ... }: Parser = p
+  in
+    t = peek_token
+  end
+
+fun expect_curr (p, t) =
+  let val { curr_token, ... }: Parser = p
+  in
+    t = curr_token
+  end
+
+fun peek_error (p, t) = 
+  let val { peek_token, errors, ... }: Parser = p
+      val err_msg = "Expected " ^ (tokenString t) ^ " but got "
+                                                      ^ (tokenString peek_token)
+      val errors  = errors @ [err_msg]
+  in
+    { lexer=(#lexer p), curr_token=(#curr_token p), peek_token=peek_token,
+                                                                 errors=errors }
+  end
+
+fun get_priority EQ        = 1
+  | get_priority NEQ       = 1
+  | get_priority LT        = 2
+  | get_priority GT        = 2
+  | get_priority PLUS      = 3
+  | get_priority MINUS     = 3
+  | get_priority SLASH     = 4
+  | get_priority ASTERISK  = 4
+  | get_priority LPAREN    = 5
+  | get_priority t         = 0
+
+fun peek_priority p =
+  let val { peek_token, ... }: Parser = p
+  in
+    get_priority peek_token
+  end
+
+(* the final function in the parser section *)
+(* val parse_program : Parser -> AST *)
+(* TODO impl *)
+
 (* TESTING *)
-(*
 (* {{{ *)
 val lexer = { input = "et super_long_var_name = 100 + 50;", ch = #"l" }
 val () = println (lexerString lexer)
@@ -385,12 +433,13 @@ val () = println (lexerString lexer)
 val (lexer, t) = next_token lexer
 val () = println (tokenString t)
 (* }}} *)
-*)
 
-val lexer = { input = "et super_long_var_name = 100 + 50;", ch = #"l" }
+(* {{{ *)
+val lexer = { input = "let super_long_var_name = 100 + 50;", ch = #" " }
 val parser = new_parser lexer
 val () = println (parserString parser)
 val parser = p_next_token parser
 val () = println (parserString parser)
 val parser = p_next_token parser
 val () = println (parserString parser)
+(* }}} *)
