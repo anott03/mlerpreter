@@ -1,0 +1,75 @@
+structure T = Token
+
+signature PARSER = sig
+  type Parser
+  type Lexer
+
+  val new_parser    : Lexer -> Parser
+  val parserString  : Parser -> string
+  val next_token    : Parser -> Parser
+  val expect_peek   : Parser * T.Token -> bool
+  val expect_curr   : Parser * T.Token -> bool
+  val peek_error    : Parser * T.Token -> Parser
+  val peek_priority : Parser -> int
+end
+
+functor ParserNew(structure L: LEXER) : PARSER = struct
+
+  type Parser = { lexer:      L.Lexer,
+                  curr_token: T.Token,
+                  peek_token: T.Token,
+                  errors:     string list }
+  type Lexer  = L.Lexer
+
+  fun parserString parser =
+    let val { curr_token=curr_token,
+              peek_token=peek_token,
+              errors=errors, ... }: Parser = parser
+    in
+      "{ curr_token=" ^ (T.tokenString curr_token) ^ ", peek_token="
+      ^ (T.tokenString peek_token) ^ " }"
+    end
+
+  fun new_parser l =
+    let val (l, firstToken)     = L.next_token l
+        val (l, secondToken)    = L.next_token l
+        val errors: string list = []
+    in
+      { curr_token=firstToken, peek_token=secondToken, errors=errors, lexer=l }
+    end
+
+  fun next_token p =
+    let val { lexer=lexer, peek_token=peek_token, errors=errors, ... }: Parser = p
+        val (lexer, nt) = L.next_token lexer
+    in
+      { lexer=lexer, curr_token=peek_token, peek_token=nt, errors=errors } 
+    end
+
+  fun expect_peek (p, t) =
+    let val { peek_token, ... }: Parser = p
+    in
+      t = peek_token
+    end
+
+  fun expect_curr (p, t) =
+    let val { curr_token, ... }: Parser = p
+    in
+      t = curr_token
+    end
+
+  fun peek_error (p, t) = 
+    let val { peek_token, errors, ... }: Parser = p
+        val err_msg = "Expected " ^ (T.tokenString t) ^ " but got "
+                                                    ^ (T.tokenString peek_token)
+        val errors  = errors @ [err_msg]
+    in
+      { lexer=(#lexer p), curr_token=(#curr_token p), peek_token=peek_token,
+                                                                 errors=errors }
+    end
+
+  fun peek_priority p =
+    let val { peek_token, ... }: Parser = p
+    in
+      T.get_priority peek_token
+    end
+end
