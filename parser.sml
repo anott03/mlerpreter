@@ -118,13 +118,13 @@ functor ParserNew(structure L: LEXER) : PARSER = struct
       A.LET_STATEMENT { token=curr_token, name=ident, value=value }
     end
 
-  (* val parse_statement : Parser * A.Program -> A.statement *)
+  (* val parse_statement : Parser * A.Program -> A.Node *)
   fun parse_statement (p, prog) =
     let val { curr_token, ... } = p
     in case curr_token
-         of T.LET    => parse_let_statement (p, prog)
-          | T.RETURN => parse_return_statement (p, prog)
-          | _      => parse_expression_statement (p, prog)
+         of T.LET    => A.STATEMENT (parse_let_statement (p, prog))
+          | T.RETURN => A.STATEMENT (parse_return_statement (p, prog))
+          | _      => A.STATEMENT (parse_expression_statement (p, prog))
     end
 
   (*
