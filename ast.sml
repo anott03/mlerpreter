@@ -1,13 +1,35 @@
 structure T = Token
 
 signature AST = sig
-  type Expression
-  type Node
+  type identifier
+  type int_lit
+  type bool_lit
+  type string_lit
+
+  datatype Expression = EMPTY
+                      | IDENTIFIER of identifier
+                      | INT_LIT    of int_lit
+                      | BOOL_LIT   of bool_lit
+                      | STRING_LIT of string_lit
+                      (* more to be added ... *)
+
   type Program
   type Env
   type Object
 
-  (* val eval : Node * Env -> Object *)
+  type let_statement
+  type return_statement
+  type expression_statement
+
+  datatype statement = LET_STATEMENT of let_statement
+                     | RETURN_STATEMENT of return_statement
+                     | EXPRESSION_STATEMENT of expression_statement
+
+  type block_statement
+
+  datatype Node = EXPRESSION      of Expression
+                | STATEMENT       of statement
+                | BLOCK_STATEMENT of block_statement
 end
 
 structure Ast : AST = struct

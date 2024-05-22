@@ -1,6 +1,9 @@
 structure T = Token
 structure A = Ast
 
+datatype 'a Result = SOME of 'a
+                   | NONE
+
 signature PARSER = sig
   type Parser
   type Lexer
@@ -14,7 +17,7 @@ signature PARSER = sig
   val peek_priority : Parser -> int
   val get_priority  : T.Token -> int
 
-  val parse_program : Parser * A.Node -> A.Node
+  val parse_program : Parser * A.Program -> A.Program
 end
 
 functor ParserNew(structure L: LEXER) : PARSER = struct
@@ -87,6 +90,18 @@ functor ParserNew(structure L: LEXER) : PARSER = struct
       get_priority peek_token
     end
 
+  (* val parse_return_statement : Parser * A.Program -> A.statement *)
+  fun parse_return_statement (p, prog) =
+              A.EXPRESSION_STATEMENT { token = T.ILLEGAL, expression = A.EMPTY }
+
+  (* val parse_expression_statement : Parser * A.Program -> A.statement *)
+  fun parse_expression_statement (p, prog) =
+              A.EXPRESSION_STATEMENT { token = T.ILLEGAL, expression = A.EMPTY }
+
+  (* val parse_expression : Parser * int -> A.Expression *)
+  fun parse_expression (p, priority) = A.EMPTY
+
+  (* val parse_let_statement : Parser * A.Program -> A.statement *)
   fun parse_let_statement (p, prog) =
     let val { curr_token, ... } = p
         (* assert that the next token is an ident *)
@@ -100,12 +115,10 @@ functor ParserNew(structure L: LEXER) : PARSER = struct
         (* assert that the next token is a semicolon *)
         (* TODO *)
     in
-      { token=curr_token, name=ident, value=value }
+      A.LET_STATEMENT { token=curr_token, name=ident, value=value }
     end
 
-  fun parse_return_statement (p, prog) = prog
-  fun parse_expression_statement (p, prog) = prog
-
+  (* val parse_statement : Parser * A.Program -> A.statement *)
   fun parse_statement (p, prog) =
     let val { curr_token, ... } = p
     in case curr_token
@@ -121,8 +134,11 @@ functor ParserNew(structure L: LEXER) : PARSER = struct
   *)
   fun parse_program (p, prog) =
     let val { curr_token, ... } = p
+        val { statements } = prog
+        val statement = parse_statement (p, prog)
+        val prog = { statements=(statements @ [statement]) }
     in if curr_token = T.EOF
          then prog
-         else parse_program (next_token p, parse_statement (p, prog))
+         else parse_program (next_token p, prog)
     end
 end
