@@ -3,6 +3,7 @@ structure T = Token
 signature AST = sig
   type Expression
   type Node
+  type Program
   type Env
   type Object
 
@@ -22,18 +23,21 @@ structure Ast : AST = struct
                        | STRING_LIT of string_lit
                        (* more to be added ... *)
 
-  datatype Node = PROGRAM         of {}
-                | EXPRESSION      of Expression
-                | STATEMENT       of {}
-                | BLOCK_STATEMENT of {}
+  type let_statement = { token: T.Token, name: identifier, value: Expression }
+  type return_statement = { token: T.Token, value: Expression }
+  type expression_statement = { token: T.Token, expression: Expression }
+
+  datatype statement = LET_STATEMENT of let_statement
+                     | RETURN_STATEMENT of return_statement
+                     | EXPRESSION_STATEMENT of expression_statement
+  type block_statement = { token: T.Token, statements: statement list }
+
+  datatype Node = EXPRESSION      of Expression
+                | STATEMENT       of statement
+                | BLOCK_STATEMENT of block_statement
+
+  type Program = { statements: Node list }
 
   type Env = (string * Expression) list
   type Object = { value: int }
-
-  (*
-  fun eval (PROGRAM p, env)          = eval_program (p, env)
-    | eval (EXPRESSION ex, env)      = eval_expression (ex, env)
-    | eval (STATEMENT s, env)        = eval_statement (s, env)
-    | eval (BLOCK_STATEMENT bs, env) = eval_block_statement (bs, env)
-    *)
 end

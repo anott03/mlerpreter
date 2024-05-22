@@ -1,4 +1,5 @@
 structure T = Token
+structure A = Ast
 
 signature PARSER = sig
   type Parser
@@ -12,6 +13,8 @@ signature PARSER = sig
   val peek_error    : Parser * T.Token -> Parser
   val peek_priority : Parser -> int
   val get_priority  : T.Token -> int
+
+  val parse_program : Parser * A.Node -> A.Node
 end
 
 functor ParserNew(structure L: LEXER) : PARSER = struct
@@ -82,5 +85,44 @@ functor ParserNew(structure L: LEXER) : PARSER = struct
     let val { peek_token, ... } = p
     in
       get_priority peek_token
+    end
+
+  fun parse_let_statement (p, prog) =
+    let val { curr_token, ... } = p
+        (* assert that the next token is an ident *)
+        (* TODO *)
+        val { curr_token, ... } = next_token p
+        val ident = { token=curr_token, value=(T.get_literal curr_token) }
+        (* assert that the next token is assign *)
+        (* TODO *)
+        val p = next_token (next_token p)
+        val value = parse_expression (p, 0)
+        (* assert that the next token is a semicolon *)
+        (* TODO *)
+    in
+      { token=curr_token, name=ident, value=value }
+    end
+
+  fun parse_return_statement (p, prog) = prog
+  fun parse_expression_statement (p, prog) = prog
+
+  fun parse_statement (p, prog) =
+    let val { curr_token, ... } = p
+    in case curr_token
+         of T.LET    => parse_let_statement (p, prog)
+          | T.RETURN => parse_return_statement (p, prog)
+          | _      => parse_expression_statement (p, prog)
+    end
+
+  (*
+  * parse_program ({ curr_token=EOF, ... }, prog) = prog
+  * parse_program (p, prog) =
+                         parse_program (next_token p, parse_statement (p, prog))
+  *)
+  fun parse_program (p, prog) =
+    let val { curr_token, ... } = p
+    in if curr_token = T.EOF
+         then prog
+         else parse_program (next_token p, parse_statement (p, prog))
     end
 end
