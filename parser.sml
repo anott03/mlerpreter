@@ -67,20 +67,20 @@ functor ParserNew(structure L: LEXER) : PARSER = struct
                                                                  errors=errors }
     end
 
-  fun get_priority EQ        = 1
-    | get_priority NEQ       = 1
-    | get_priority LT        = 2
-    | get_priority GT        = 2
-    | get_priority PLUS      = 3
-    | get_priority MINUS     = 3
-    | get_priority SLASH     = 4
-    | get_priority ASTERISK  = 4
-    | get_priority LPAREN    = 5
-    | get_priority t         = 0
+  fun get_priority T.EQ       = 1
+    | get_priority T.NEQ      = 1
+    | get_priority T.LT       = 2
+    | get_priority T.GT       = 2
+    | get_priority T.PLUS     = 3
+    | get_priority T.MINUS    = 3
+    | get_priority T.SLASH    = 4
+    | get_priority T.ASTERISK = 4
+    | get_priority T.LPAREN   = 5
+    | get_priority _          = 0
 
   fun peek_priority p =
     let val { peek_token, ... } = p
     in
-      T.get_priority peek_token
+      get_priority peek_token
     end
 end
