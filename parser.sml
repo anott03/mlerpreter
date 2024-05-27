@@ -9,14 +9,6 @@ signature PARSER = sig
   type Lexer
 
   val new_parser    : Lexer -> Parser
-  val parserString  : Parser -> string
-  val next_token    : Parser -> Parser
-  val expect_peek   : Parser * T.Token -> bool
-  val expect_curr   : Parser * T.Token -> bool
-  val peek_error    : Parser * T.Token -> Parser
-  val peek_priority : Parser -> int
-  val get_priority  : T.Token -> int
-
   val parse_program : Parser * A.Program -> A.Program
 end
 
@@ -28,7 +20,7 @@ functor ParserNew(structure L: LEXER) : PARSER = struct
   type Lexer  = L.Lexer
 
   fun parserString parser =
-    let val { curr_token, peek_token, errors, lexer } = parser
+    let val { curr_token, peek_token, ... }: Parser = parser
     in
       "{ curr_token=" ^ (T.tokenString curr_token) ^ ", peek_token="
       ^ (T.tokenString peek_token) ^ " }"
@@ -43,23 +35,59 @@ functor ParserNew(structure L: LEXER) : PARSER = struct
     end
 
   fun next_token p =
-    let val { lexer, curr_token, peek_token, errors } = p
+    let val { lexer, peek_token, errors, ... }: Parser = p
         val (lexer, nt) = L.next_token lexer
     in
       { lexer=lexer, curr_token=peek_token, peek_token=nt, errors=errors } 
     end
 
-  fun expect_peek (p, t) =
-    let val { lexer, curr_token, peek_token, errors } = p
-    in
-      t = peek_token
+  fun expect_peek (p, T.IDENT _) =
+    let val { peek_token, ... }: Parser = p
+    in case peek_token
+         of T.IDENT _ => true
+          | _         => false
     end
+    | expect_peek (p, T.INT _) =
+    let val { peek_token, ... }: Parser = p
+    in case peek_token
+         of T.INT _ => true
+          | _       => false
+    end
+    | expect_peek (p, T.STRING _) =
+    let val { peek_token, ... }: Parser = p
+    in case peek_token
+         of T.STRING _ => true
+          | _          => false
+    end
+    | expect_peek (p, t) =
+      let val { peek_token, ... }: Parser = p
+      in
+        t = peek_token
+      end
 
-  fun expect_curr (p, t) =
-    let val { lexer, curr_token, peek_token, errors } = p
-    in
-      t = curr_token
+  fun expect_curr (p, T.IDENT _) =
+    let val { curr_token, ... }: Parser = p
+    in case curr_token
+         of T.IDENT _ => true
+          | _         => false
     end
+    | expect_curr (p, T.INT _) =
+    let val { curr_token, ... }: Parser = p
+    in case curr_token
+         of T.INT _ => true
+          | _       => false
+    end
+    | expect_curr (p, T.STRING _) =
+    let val { curr_token, ... }: Parser = p
+    in case curr_token
+         of T.STRING _ => true
+          | _          => false
+    end
+    | expect_curr (p, t) =
+      let val { curr_token, ... }: Parser = p
+      in
+        t = curr_token
+      end
 
   fun peek_error (p, t) = 
     let val { lexer=lexer, curr_token=curr_token, peek_token=peek_token, errors=errors } = p
@@ -83,7 +111,7 @@ functor ParserNew(structure L: LEXER) : PARSER = struct
     | get_priority _          = 0
 
   fun peek_priority p =
-    let val { lexer, curr_token, peek_token, errors } = p
+    let val { peek_token, ... }: Parser = p
     in
       get_priority peek_token
     end
@@ -101,7 +129,7 @@ functor ParserNew(structure L: LEXER) : PARSER = struct
 
   (* val parse_let_statement : Parser * A.Program -> A.statement *)
   fun parse_let_statement p =
-    let val { curr_token, ... } = p
+    let val peek_is_idnet = expect_peek (p, T.IDENT "")
         (* assert that the next token is an ident *)
         (* TODO *)
         val { curr_token, ... } = next_token p
