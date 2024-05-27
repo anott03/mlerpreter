@@ -28,10 +28,7 @@ functor ParserNew(structure L: LEXER) : PARSER = struct
   type Lexer  = L.Lexer
 
   fun parserString parser =
-    let val { curr_token=curr_token,
-              peek_token=peek_token,
-              errors=errors,
-              lexer=lexer } = parser
+    let val { curr_token, peek_token, errors, lexer } = parser
     in
       "{ curr_token=" ^ (T.tokenString curr_token) ^ ", peek_token="
       ^ (T.tokenString peek_token) ^ " }"
@@ -46,20 +43,20 @@ functor ParserNew(structure L: LEXER) : PARSER = struct
     end
 
   fun next_token p =
-    let val { lexer=lexer, curr_token=curr_token, peek_token=peek_token, errors=errors } = p
+    let val { lexer, curr_token, peek_token, errors } = p
         val (lexer, nt) = L.next_token lexer
     in
       { lexer=lexer, curr_token=peek_token, peek_token=nt, errors=errors } 
     end
 
   fun expect_peek (p, t) =
-    let val { lexer=lexer, curr_token=curr_token, peek_token=peek_token, errors=errors } = p
+    let val { lexer, curr_token, peek_token, errors } = p
     in
       t = peek_token
     end
 
   fun expect_curr (p, t) =
-    let val { lexer=lexer, curr_token=curr_token, peek_token=peek_token, errors=errors } = p
+    let val { lexer, curr_token, peek_token, errors } = p
     in
       t = curr_token
     end
@@ -86,7 +83,7 @@ functor ParserNew(structure L: LEXER) : PARSER = struct
     | get_priority _          = 0
 
   fun peek_priority p =
-    let val { lexer=lexer, curr_token=curr_token, peek_token=peek_token, errors=errors } = p
+    let val { lexer, curr_token, peek_token, errors } = p
     in
       get_priority peek_token
     end
