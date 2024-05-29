@@ -8,6 +8,8 @@ signature PARSER = sig
   type Parser
   type Lexer
 
+  exception PeekError of string
+
   val new_parser    : Lexer -> Parser
   val parse_program : Parser * A.Program -> A.Program
 end
@@ -18,6 +20,8 @@ functor ParserNew(structure L: LEXER) : PARSER = struct
                   peek_token: T.Token,
                   errors:     string list }
   type Lexer  = L.Lexer
+
+  exception PeekError of string
 
   fun parserString parser =
     let val { curr_token, peek_token, ... }: Parser = parser
@@ -116,32 +120,51 @@ functor ParserNew(structure L: LEXER) : PARSER = struct
       get_priority peek_token
     end
 
+  (* val parse_expression : Parser * int -> Parser * A.Expression *)
+  fun parse_expression (p, priority) = (p, A.EMPTY) (* TODO *)
+
   (* val parse_return_statement : Parser * A.Program -> A.statement *)
-  fun parse_return_statement (p, prog) =
+  fun parse_return_statement (p, prog) = (* TODO *)
               A.EXPRESSION_STATEMENT { token = T.ILLEGAL, expression = A.EMPTY }
 
   (* val parse_expression_statement : Parser * A.Program -> A.statement *)
-  fun parse_expression_statement (p, prog) =
+  fun parse_expression_statement (p, prog) = (* TODO *)
               A.EXPRESSION_STATEMENT { token = T.ILLEGAL, expression = A.EMPTY }
-
-  (* val parse_expression : Parser * int -> A.Expression *)
-  fun parse_expression (p, priority) = A.EMPTY
 
   (* val parse_let_statement : Parser * A.Program -> A.statement *)
   fun parse_let_statement p =
-    let val peek_is_idnet = expect_peek (p, T.IDENT "")
-        (* assert that the next token is an ident *)
-        (* TODO *)
-        val { curr_token, ... } = next_token p
+    let val { peek_token, ... } = p
+        val peek_valid = expect_peek (p, T.IDENT "")
+        val () = print ("PEEK VALID: " ^ (if peek_valid then "true" else "false") ^ "\n")
+        val peek_msg =
+          if peek_valid then ""
+          else "expected IDENT(...) but got " ^ (T.tokenString peek_token)
+
+        val p = next_token p
+        val { curr_token, ... } = p
         val ident = { token=curr_token, value=(T.get_literal curr_token) }
-        (* assert that the next token is assign *)
-        (* TODO *)
+
+        val peek_valid = expect_peek (p, T.ASSIGN)
+        val () = print ("PEEK VALID: " ^ (if peek_valid then "true" else "false") ^ "\n")
+        val peek_msg = if not peek_valid andalso peek_msg = "" then
+                         "expected ASSIGN but got " ^ (T.tokenString peek_token)
+                       else
+                         peek_msg
+
         val p = next_token (next_token p)
-        val value = parse_expression (p, 0)
-        (* assert that the next token is a semicolon *)
-        (* TODO *)
+        val (p, value) = parse_expression (p, 0)
+
+        val peek_valid = expect_peek (p, T.IDENT "")
+        val () = print ("PEEK VALID: " ^ (if peek_valid then "true" else "false") ^ "\n")
+        val peek_msg = if not peek_valid andalso peek_msg = "" then
+                         "expected SEMICOLON but got " ^ (T.tokenString peek_token)
+                       else
+                         peek_msg
     in
-      A.LET_STATEMENT { token=curr_token, name=ident, value=value }
+      if peek_valid then
+        A.LET_STATEMENT { token=curr_token, name=ident, value=value }
+      else
+        raise PeekError peek_msg
     end
 
   (* val parse_statement : Parser * A.Program -> A.Node *)

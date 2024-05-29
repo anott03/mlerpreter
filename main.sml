@@ -22,3 +22,5 @@ val prog: A.Program = { statements=statements }
 val prog = P.parse_program (parser, prog)
 
 val () = println("PROGRAM LENGTH: " ^ intString(length (#statements prog)))
+val () = println ""
+val () = println (A.programString prog)

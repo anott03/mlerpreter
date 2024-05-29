@@ -51,7 +51,7 @@ struct
                                                                            NONE)
         val c = String.sub(remainder, 0)
     in
-      (read_char { input=remainder, ch=c  }, (T.IDENT identifier))
+      (read_char { input=remainder, ch=c  }, (T.lookup_ident identifier))
     end
 
   fun read_number l =
