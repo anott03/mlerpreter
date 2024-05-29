@@ -135,7 +135,6 @@ functor ParserNew(structure L: LEXER) : PARSER = struct
   fun parse_let_statement p =
     let val { peek_token, ... } = p
         val peek_valid = expect_peek (p, T.IDENT "")
-        val () = print ("PEEK VALID: " ^ (if peek_valid then "true" else "false") ^ "\n")
         val peek_msg =
           if peek_valid then ""
           else "expected IDENT(...) but got " ^ (T.tokenString peek_token)
@@ -145,7 +144,6 @@ functor ParserNew(structure L: LEXER) : PARSER = struct
         val ident = { token=curr_token, value=(T.get_literal curr_token) }
 
         val peek_valid = expect_peek (p, T.ASSIGN)
-        val () = print ("PEEK VALID: " ^ (if peek_valid then "true" else "false") ^ "\n")
         val peek_msg = if not peek_valid andalso peek_msg = "" then
                          "expected ASSIGN but got " ^ (T.tokenString peek_token)
                        else
@@ -155,9 +153,9 @@ functor ParserNew(structure L: LEXER) : PARSER = struct
         val (p, value) = parse_expression (p, 0)
 
         val peek_valid = expect_peek (p, T.IDENT "")
-        val () = print ("PEEK VALID: " ^ (if peek_valid then "true" else "false") ^ "\n")
         val peek_msg = if not peek_valid andalso peek_msg = "" then
-                         "expected SEMICOLON but got " ^ (T.tokenString peek_token)
+                         "expected SEMICOLON but got " ^
+                         (T.tokenString peek_token)
                        else
                          peek_msg
     in
